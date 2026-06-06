@@ -5,8 +5,7 @@
 
 ## 🎬 Демо
 
-<!-- сюда вставить видео, см. ниже -->
-https://github.com/USER/REPO/assets/XXXX/your-video-id
+[out (2).webm](https://github.com/user-attachments/assets/9861c3cf-4a35-4733-a8d2-05b25c11c97f)
 
 ## ✨ Возможности
 - Приём анимированных стикеров (`.tgs`) в чате
