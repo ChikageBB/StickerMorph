@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: StickerMorphBot
+
+app:
+  telegram:
+    url: https://api.telegram.org/bot
+    token: ${BOT_TOKEN}
+    debug: false
+    update-listener-sleep: 1s
+  conversion:
+    python-path: /usr/bin/python3
+    render-script-path: ${user.dir}/scripts/tgs_to_frames.py
+    ffmpeg-path: /opt/homebrew/bin/ffmpeg
+    work-dir: ${java.io.tmpdir}/stickermorph
+    fallback-fps: 30
+    crf: 30
+    process-timeout: 60s
+
+    executor:
+      pool-size: 2
+      max-pool-size: 4
+      queue-capacity: 20
+      thread-name-prefix: conv-
