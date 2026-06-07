@@ -22,7 +22,7 @@ public class StickerConverter {
     private final FfmpegEncoder ffmpegEncoder;
     private final ConversionProperties props;
 
-    public record ConversionResult(Path webm, Path workDir) implements Closeable {
+    public record ConversionResult(Path file, Path workDir) implements Closeable {
 
         @Override
         public void close() throws IOException {
@@ -49,7 +49,7 @@ public class StickerConverter {
         }
     }
 
-    public ConversionResult convert(byte[] tgsBytes) {
+    public ConversionResult convert(byte[] tgsBytes, ConversionFormat format) {
         Path workDir = createWorkDir();
         try {
             Path tgsFile = workDir.resolve("sticker.tgs");
@@ -58,8 +58,8 @@ public class StickerConverter {
             Path framesDir = Files.createDirectories(workDir.resolve("frames"));
             double fps = lottieRenderer.render(tgsFile, framesDir);
 
-            Path webm = workDir.resolve("out.webm");
-            ffmpegEncoder.encode(framesDir, fps, webm);
+            Path webm = workDir.resolve(format.getFileName());
+            ffmpegEncoder.encode(framesDir, fps, webm, format);
 
             log.info("Конвертация готова: {} (fps={})", webm, fps);
             return new ConversionResult(webm, workDir);
