@@ -1,6 +1,7 @@
 package com.chikage.stickermorphbot.handler;
 
 import com.chikage.stickermorphbot.converter.ConversionFormat;
+import com.chikage.stickermorphbot.converter.StickerType;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Sticker;
 import com.pengrad.telegrambot.model.Update;
@@ -30,15 +31,11 @@ public class StickerHandler implements UpdateHandler{
         Integer stickerMessageId = update.message().messageId();
         Sticker sticker = update.message().sticker();
 
+        StickerType stickerType = StickerType.from(sticker);
+
         log.info("Пришел стикер от {}, {}", chatId, sticker.emoji());
 
-        if (!sticker.isAnimated()) {
-            telegramBot.execute(new SendMessage(chatId,
-                    "Пока умею конвертировать только анимированные стикеры (.tgs) 🙏"));
-            return;
-        }
-
-        InlineKeyboardButton[] buttons = Arrays.stream(ConversionFormat.values())
+        InlineKeyboardButton[] buttons = stickerType.getFormats().stream()
                 .map(f -> new InlineKeyboardButton(f.getLabel())
                         .callbackData("conv:" + f.getCode()))
                 .toArray(InlineKeyboardButton[]::new);

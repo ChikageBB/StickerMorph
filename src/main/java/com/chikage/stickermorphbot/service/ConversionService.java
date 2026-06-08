@@ -3,11 +3,11 @@ package com.chikage.stickermorphbot.service;
 import com.chikage.stickermorphbot.cache.ConversionResultCache;
 import com.chikage.stickermorphbot.converter.ConversionFormat;
 import com.chikage.stickermorphbot.converter.StickerConverter;
+import com.chikage.stickermorphbot.converter.StickerType;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.SendAnimation;
 import com.pengrad.telegrambot.request.SendDocument;
-import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendVideo;
 import com.pengrad.telegrambot.response.SendResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class ConversionService {
     private final ConversionResultCache resultCache;
 
     public void convertAndSend(Long chatId, String uniqueId, String fileId,
-                               ConversionFormat format, TelegramBot bot) throws IOException {
+                               StickerType stickerType, ConversionFormat format, TelegramBot bot) throws IOException {
 
         CachedFile cached = resultCache.get(uniqueId, format);
         if (cached != null) {
@@ -37,8 +37,8 @@ public class ConversionService {
             return;
         }
 
-        byte[] tgsBytes = fileService.downloadFile(fileId);
-        try (StickerConverter.ConversionResult result = converter.convert(tgsBytes, format)) {
+        byte[] inputBytes = fileService.downloadFile(fileId);
+        try (StickerConverter.ConversionResult result = converter.convert(inputBytes, stickerType, format)) {
 
             SendResponse response = bot.execute(new SendDocument(chatId, result.file().toFile()));
             CachedFile sent = extractFile(response.message());

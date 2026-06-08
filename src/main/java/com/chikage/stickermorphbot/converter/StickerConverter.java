@@ -11,6 +11,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -49,20 +50,30 @@ public class StickerConverter {
         }
     }
 
-    public ConversionResult convert(byte[] tgsBytes, ConversionFormat format) {
+    public ConversionResult convert(byte[] inputBytes, StickerType stickerType, ConversionFormat format) {
         Path workDir = createWorkDir();
         try {
-            Path tgsFile = workDir.resolve("sticker.tgs");
-            Files.write(tgsFile, tgsBytes);
+            List<String> sourceInput;
 
-            Path framesDir = Files.createDirectories(workDir.resolve("frames"));
-            double fps = lottieRenderer.render(tgsFile, framesDir);
+            if (stickerType == StickerType.ANIMATED) {
+                Path tgs = workDir.resolve("sticker.tgs");
+                Files.write(tgs, inputBytes);
+                Path framesDir = Files.createDirectories(workDir.resolve("frames"));
+                double fps = lottieRenderer.render(tgs, framesDir);
+                sourceInput = List.of("-framerate", String.valueOf(fps),
+                        "-i", framesDir.resolve("frame_%05d.png").toString());
+            } else {
+                String name = (stickerType == StickerType.VIDEO) ? "sticker.webm" : "sticker.webp";
+                Path in = workDir.resolve(name);
+                Files.write(in, inputBytes);
+                sourceInput = List.of("-i", in.toString());
+            }
 
-            Path webm = workDir.resolve(format.getFileName());
-            ffmpegEncoder.encode(framesDir, fps, webm, format);
+            Path output = workDir.resolve(format.getFileName());
+            ffmpegEncoder.encode(sourceInput, output, format);
 
-            log.info("Конвертация готова: {} (fps={})", webm, fps);
-            return new ConversionResult(webm, workDir);
+            log.info("Конвертация готова: {} (type={}, format={})", output, stickerType, format.getCode());
+            return new ConversionResult(output, workDir);
         } catch (IOException e) {
             ConversionResult.deleteRecursively(workDir);
             throw new UncheckedIOException("Ошибка конвертации стикера", e);
@@ -71,7 +82,6 @@ public class StickerConverter {
             throw e;
         }
     }
-
 
     private Path createWorkDir() {
         try {
@@ -82,5 +92,4 @@ public class StickerConverter {
             throw new UncheckedIOException("Не удалось создать рабочую папку", e);
         }
     }
-
 }
