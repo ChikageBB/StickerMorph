@@ -22,3 +22,13 @@ app:
       max-pool-size: 4
       queue-capacity: 20
       thread-name-prefix: conv-
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
