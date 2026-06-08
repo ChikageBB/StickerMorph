@@ -1,12 +1,14 @@
 package com.chikage.stickermorphbot.handler;
 
 import com.chikage.stickermorphbot.converter.ConversionFormat;
+import com.chikage.stickermorphbot.converter.StickerType;
 import com.chikage.stickermorphbot.service.ConversionService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.AnswerCallbackQuery;
+import com.pengrad.telegrambot.request.DeleteMessage;
 import com.pengrad.telegrambot.request.SendMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +35,6 @@ public class CallbackQueryHandler implements UpdateHandler {
     public void handle(Update update, TelegramBot telegramBot) {
         CallbackQuery cq = update.callbackQuery();
 
-
         Message botMessage = cq.message();
         ConversionFormat format = ConversionFormat.fromCode(cq.data().substring("conv:".length()));
 
@@ -47,22 +48,26 @@ public class CallbackQueryHandler implements UpdateHandler {
         }
 
         Long chatId = botMessage.chat().id();
+
+        telegramBot.execute(new DeleteMessage(chatId, botMessage.messageId()));
+
         var sticker = botMessage.replyToMessage().sticker();
         String fileId = sticker.fileId();
         String uniqueId = sticker.fileUniqueId();
+        StickerType stickerType = StickerType.from(sticker);
 
         try {
-            conversionExecutor.execute(() -> process(chatId, uniqueId, fileId, format, telegramBot));
+            conversionExecutor.execute(() -> process(chatId, uniqueId, fileId, stickerType, format, telegramBot));
         } catch (TaskRejectedException e) {
             telegramBot.execute(new SendMessage(chatId,
                     "Сейчас много запросов, попробуй через минуту 🙏"));
         }
     }
 
-    private void process(Long chatId, String uniqueId, String fileId, ConversionFormat format, TelegramBot telegramBot) {
+    private void process(Long chatId, String uniqueId, String fileId, StickerType stickerType, ConversionFormat format, TelegramBot telegramBot) {
         telegramBot.execute(new SendMessage(chatId, "⏳ Конвертирую в " + format.getCode() + "..."));
         try {
-            conversionService.convertAndSend(chatId, uniqueId, fileId, format, telegramBot);
+            conversionService.convertAndSend(chatId, uniqueId, fileId, stickerType, format, telegramBot);
         } catch (Exception e) {
             log.error("Ошибка конвертации, chatId={}", chatId, e);
             telegramBot.execute(new SendMessage(chatId, "Не получилось сконвертировать стикер 😔"));

@@ -9,7 +9,8 @@ public enum ConversionFormat {
 
     WEBM("WEBM", "🟢 WEBM (прозрачный)", "out.webm"),
     GIF("GIF",  "🖼 GIF",               "out.gif"),
-    MP4("MP4",  "🎬 MP4",               "out.mp4");
+    MP4("MP4",  "🎬 MP4",               "out.mp4"),
+    PNG("PNG", "🖼 PNG", "out.png");
 
     private final String code;
     private final String label;
